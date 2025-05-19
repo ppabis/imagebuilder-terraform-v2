@@ -29,6 +29,7 @@ module "instance_profile" {
   role_name               = "image-builder-role"
   create_role             = true
   create_instance_profile = true
+  role_requires_mfa       = false
   custom_role_policy_arns = [
     "arn:aws:iam::aws:policy/EC2InstanceProfileForImageBuilder",
     "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
