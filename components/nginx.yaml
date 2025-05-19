@@ -1,0 +1,78 @@
+---
+description: "This component installs and configures latest Nginx on Amazon Linux 2023."
+schemaVersion: "1.0"
+parameters:
+  - port:
+      type: string
+      description: "Port to forward to"
+      default: "8080"
+phases:
+  - name: build
+    steps:
+      - name: InstallNginx
+        action: ExecuteBash
+        inputs:
+          commands:
+            - yum update -y
+            - yum install nginx -y
+            - systemctl enable nginx
+            - systemctl start nginx
+      - name: ConfigureNginxDefaults
+        action: CreateFile
+        inputs:
+          - path: /etc/nginx/conf.d/default.conf
+            overwrite: true
+            content: |-
+              server {
+                listen {{ port }};
+                server_name _;
+                location / {
+                  root   /usr/share/nginx/html;
+                  index  index.html index.htm;
+                }
+              }
+          - path: /usr/share/nginx/html/index.html
+            overwrite: true
+            content: |-
+              <html> <body>
+                <p>This Nginx instance was configured by Image Builder.</p>
+              </body> </html>
+  
+  - name: validate
+    steps:
+      - name: ValidateNginx
+        action: ExecuteBash
+        inputs:
+          commands:
+            - systemctl restart nginx
+            - CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:{{ port }})
+            - DATA=$(curl -s http://localhost:{{ port }})
+            - if [[ "$CODE" != "200" ]]; then exit 1; fi # Should be 200 because default page is served
+            - if [[ "$DATA" != *"configured by Image Builder"* ]]; then exit 1; fi # Should contain the new string
+  
+  - name: test
+    steps:
+      - name: NewTestConfig
+        action: CreateFile
+        inputs:
+          - path: /etc/nginx/conf.d/default.conf
+            overwrite: true
+            content: |-
+              server {
+                listen {{ port }};
+                server_name _;
+                location /api { return 200 "Hello api!"; }
+                location / {
+                  root   /usr/share/nginx/html;
+                  index  index.html index.htm;
+                }
+              }
+      - name: TestNginx
+        action: ExecuteBash
+        inputs:
+          commands:
+            - systemctl restart nginx
+            - DATA=$(curl -s http://localhost:{{ port }})
+            - if [[ "$DATA" != *"configured by Image Builder"* ]]; then exit 1; fi # Should contain the previous string
+            - DATA=$(curl -s http://localhost:{{ port }}/api)
+            - if [[ "$DATA" != *"Hello api"* ]]; then exit 1; fi # Should contain new location
