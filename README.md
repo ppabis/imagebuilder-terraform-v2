@@ -3,6 +3,7 @@ AWS EC2 Image Builder example with Terraform
 
 More information here:
 
+- [https://dev.to/aws-builders/aws-ec2-image-builder-by-example-with-terraform-2koa](https://dev.to/aws-builders/aws-ec2-image-builder-by-example-with-terraform-2koa)
 - [https://pabis.eu/blog/2025-05-23-AWS-EC2-Image-Builder-Example-Terraform.html](https://pabis.eu/blog/2025-05-23-AWS-EC2-Image-Builder-Example-Terraform.html)
 
 This repository shows an example how to build an Amazon Machine Image using
